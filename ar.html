@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Un detalle especial</title>
+    <style>
+        body {
+            font-family: 'Apple SD Gothic Neo', 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #fce4ec 0%, #f8bbd0 100%);
+            text-align: center;
+            color: #444;
+        }
+        .card {
+            background: white;
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            max-width: 320px;
+            width: 90%;
+        }
+        h1 { color: #d81b60; font-size: 1.5rem; margin-bottom: 10px; }
+        p { line-height: 1.6; margin-bottom: 25px; }
+        .btn {
+            background-color: #ec407a;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(236, 64, 122, 0.3);
+            transition: all 0.3s ease;
+        }
+        .btn:active { transform: scale(0.95); }
+        #loader { display: none; margin-top: 20px; color: #888; font-style: italic; }
+        #resultado {
+            margin-top: 25px;
+            font-size: 1.1rem;
+            display: none;
+            animation: fadeIn 1s;
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h1>Hola ✨</h1>
+        <p>He preparado algo para mostrarte que no importa la distancia...</p>
+        
+        <button class="btn" onclick="iniciarBusqueda()">Presiona para ver</button>
+        
+        <div id="loader">Conectando con satélites GPS... 🛰️</div>
+        <div id="resultado"></div>
+    </div>
+
+    <script>
+        // --- CONFIGURACIÓN: Reemplaza con tus coordenadas exactas ---
+        const miLat = -12.046374; 
+        const miLon = -77.042793;
+        // ----------------------------------------------------------
+
+        function iniciarBusqueda() {
+            const loader = document.getElementById('loader');
+            const res = document.getElementById('resultado');
+            const btn = document.querySelector('.btn');
+
+            btn.style.display = 'none';
+            loader.style.display = 'block';
+
+            const opciones = {
+                enableHighAccuracy: true, // MÁXIMA PRECISIÓN (Usa GPS)
+                timeout: 20000,           // Espera hasta 20 segundos la señal
+                maximumAge: 0             // No usa caché, busca posición actual real
+            };
+
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userLat = position.coords.latitude;
+                        const userLon = position.coords.longitude;
+                        const precision = position.coords.accuracy; // En metros
+
+                        const dist = calcularDistancia(miLat, miLon, userLat, userLon);
+
+                        loader.style.display = 'none';
+                        res.style.display = 'block';
+                        
+                        // Mostramos 3 decimales para dar sensación de precisión absoluta
+                        res.innerHTML = `
+                            Estamos a exactamente:<br>
+                            <b style="font-size: 1.5rem; color: #d81b60;">${dist.toFixed(3)} km</b><br>
+                            <span style="font-size: 0.8rem; color: #999;">
+                                (Margen de error: ${precision.toFixed(1)} metros)
+                            </span><br><br>
+                            Siempre cerca de ti. ❤️
+                        `;
+                    },
+                    (error) => {
+                        loader.style.display = 'none';
+                        res.style.display = 'block';
+                        res.innerHTML = "Para que la sorpresa funcione, necesito que aceptes el permiso de ubicación. 🌹";
+                    },
+                    opciones
+                );
+            } else {
+                res.innerHTML = "Tu dispositivo no permite esta función.";
+            }
+        }
+
+        // Fórmula matemática para calcular distancia sobre la tierra (Haversine)
+        function calcularDistancia(lat1, lon1, lat2, lon2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLon = (lon2 - lon1) * Math.PI / 180;
+            const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                      Math.sin(dLon/2) * Math.sin(dLon/2);
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+            return R * c;
+        }
+    </script>
+</body>
+</html>
